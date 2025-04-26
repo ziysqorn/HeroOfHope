@@ -64,31 +64,25 @@ float AMainCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-	if (characterASComp) {
-		characterASComp->InitAbilityActorInfo(this, this);
-		if (InputComponent) {
-			const FGameplayAbilityInputBinds BindAttack(
-				"Attack",
-				"",
-				"EPlayerAbilityInputID",
-				static_cast<int32>(EPlayerAbilityInputID::Attack)
-			);
-			const FGameplayAbilityInputBinds BindJump(
-				"Jump",
-				"",
-				"EPlayerAbilityInputID",
-				static_cast<int32>(EPlayerAbilityInputID::Jump)
-			);
-			characterASComp->BindAbilityActivationToInputComponent(InputComponent, BindAttack);
-		}
-	}
 	if (UEnhancedInputComponent* EIComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent)) {
 		if (AMainController* MainController = Cast<AMainController>(GetController())) {
 			EIComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
 			EIComponent->BindAction(IA_Move, ETriggerEvent::Completed, this, &AMainCharacter::StopMoving);
 			EIComponent->BindAction(IA_Dodge, ETriggerEvent::Triggered, this, &AMainCharacter::Dodge);
-			EIComponent->BindAction(IA_Jump, ETriggerEvent::Triggered, this, &AMainCharacter::CustomJump);
 			EIComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &AMainCharacter::Attack);
+		}
+	}
+
+	if (characterASComp) {
+		if (InputComponent) {
+			const FGameplayAbilityInputBinds Binds(
+				"Confirm",
+				"Cancel",
+				"EPlayerAbilityInputID",
+				static_cast<int32>(EPlayerAbilityInputID::Confirm),
+				static_cast<int32>(EPlayerAbilityInputID::Cancel)
+			);
+			characterASComp->BindAbilityActivationToInputComponent(InputComponent, Binds);
 		}
 	}
 }
@@ -105,6 +99,10 @@ void AMainCharacter::SetupMappingContext()
 
 void AMainCharacter::Move(const FInputActionValue& value)
 {
+	if (characterASComp) {
+		FGameplayTag gameplayTag = FGameplayTag::RequestGameplayTag(FName("State.Move"));
+		characterASComp->AddLooseGameplayTag(gameplayTag);
+	}
 	const float DirectionValue = value.Get<float>();
 	AddMovementInput(FVector(1, 0, 0), DirectionValue);
 	if (DirectionValue > 0) {
@@ -130,8 +128,8 @@ void AMainCharacter::Dodge()
 
 void AMainCharacter::CustomJump()
 {
-	this->JumpCurrentCount = 0;
-	this->GetCharacterMovement()->AddImpulse(FVector(1000 * GetSprite()->GetForwardVector().X, 0, 600), true);
+	this->Jump();
+	//this->GetCharacterMovement()->AddImpulse(FVector(1000 * GetSprite()->GetForwardVector().X, 0, 600), true);
 }
 
 void AMainCharacter::Attack()

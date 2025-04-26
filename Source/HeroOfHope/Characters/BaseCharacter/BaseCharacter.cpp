@@ -18,10 +18,6 @@ void ABaseCharacter::BeginPlay()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel1, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_GameTraceChannel2, ECR_Ignore);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_WorldDynamic, ECR_Overlap);
-
-	if (characterASComp) {
-		characterASComp->InitAbilityActorInfo(this, this);
-	}
 }
 
 
@@ -29,6 +25,42 @@ void ABaseCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	FlashTimeline.TickTimeline(DeltaSeconds);
+}
+
+void ABaseCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	if (characterASComp) {
+		characterASComp->InitAbilityActorInfo(this, this);
+	}
+
+	InitializeAttributes();
+	GiveAbilities();
+}
+
+void ABaseCharacter::OnRep_PlayerState()
+{
+	Super::OnRep_PlayerState();
+
+	if (characterASComp) {
+		characterASComp->InitAbilityActorInfo(this, this);
+	}
+
+	InitializeAttributes();
+
+	if (characterASComp) {
+		if (InputComponent) {
+			const FGameplayAbilityInputBinds Binds(
+				"Confirm",
+				"Cancel",
+				"EPlayerAbilityInputID",
+				static_cast<int32>(EPlayerAbilityInputID::Confirm),
+				static_cast<int32>(EPlayerAbilityInputID::Cancel)
+			);
+			characterASComp->BindAbilityActivationToInputComponent(InputComponent, Binds);
+		}
+	}
 }
 
 void ABaseCharacter::Landed(const FHitResult& Hit)
@@ -41,7 +73,7 @@ void ABaseCharacter::FlashWhenDamaged(float Value)
 	DynamicMaterial->SetScalarParameterValue("FlashMultiplier", Value);
 }
 
-void ABaseCharacter::AddStartupGameplayAbilities()
+void ABaseCharacter::GiveAbilities()
 {
 	check(characterASComp);
 	for (TSubclassOf<UCharacterAbility>& gameplayAbility : GameplayAbilities) {
@@ -51,7 +83,11 @@ void ABaseCharacter::AddStartupGameplayAbilities()
 			this
 		));
 	}
+}
 
+void ABaseCharacter::InitializeAttributes()
+{
+	check(characterASComp); 
 	for (const TSubclassOf<UGameplayEffect>& gameplayEffect : PassiveGameplayEffect) {
 		FGameplayEffectContextHandle EffectContext = characterASComp->MakeEffectContext();
 		EffectContext.AddSourceObject(this);
@@ -59,9 +95,8 @@ void ABaseCharacter::AddStartupGameplayAbilities()
 		FGameplayEffectSpecHandle NewHandle = characterASComp->MakeOutgoingSpec(gameplayEffect, 1, EffectContext);
 
 		if (NewHandle.IsValid()) {
-			FActiveGameplayEffectHandle ActiveGameplayEffectHandle = characterASComp->ApplyGameplayEffectSpecToTarget(
-				*NewHandle.Data.Get(), characterASComp);
-
+			FActiveGameplayEffectHandle ActiveGameplayEffectHandle = characterASComp->ApplyGameplayEffectSpecToSelf(
+				*NewHandle.Data.Get());
 		}
 	}
 }
@@ -82,16 +117,6 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 					HurtSequence->GetTotalDuration(), false);*/
 			}
 		}
-		/*if (StatsPopoutSubclass) {
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.Owner = this;
-			if (AStatsPopout* stats = GetWorld()->SpawnActor<AStatsPopout>(StatsPopoutSubclass, this->GetActorLocation(), FRotator(0.0f, 0.0f, 0.0f), SpawnParams)) {
-				if (UStatsPopoutUI* statsUI = stats->GetStatsPopoutUI()) {
-					FText inText = FText::FromString(FString::FromInt(FinalDamage));
-					statsUI->SetText(inText);
-				}
-			}
-		}*/
 	}
 	return 0.0f;
 }

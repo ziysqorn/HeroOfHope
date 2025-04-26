@@ -4,13 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "../../ProjectIncludes.h"
-#include "MainHUD.generated.h"
+#include "MainCharacterHUD.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class HEROOFHOPE_API UMainHUD : public UUserWidget
+class HEROOFHOPE_API UMainCharacterHUD : public UUserWidget
 {
 	GENERATED_BODY()
 	

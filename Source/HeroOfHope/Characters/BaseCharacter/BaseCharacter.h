@@ -68,6 +68,8 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
+	void PossessedBy(AController* NewController) override;
+	void OnRep_PlayerState() override;
 	//Event taking damage
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 	//Event landed
@@ -89,7 +91,8 @@ public:
 		return characterASComp;
 	}
 
-	void AddStartupGameplayAbilities();
+	void GiveAbilities();
+	void InitializeAttributes();
 
 	UFUNCTION()
 	float GetHealthPercentage() const {

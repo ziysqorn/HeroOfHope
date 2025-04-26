@@ -35,12 +35,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Inputs|InputAction")
 	UInputAction* IA_Attack = nullptr;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Inputs|InputAction")
-	UInputAction* IA_Shoot = nullptr;
-
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Inputs|InputAction")
-	UInputAction* IA_PauseGame = nullptr;
-
 	//Input mapping context
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Inputs|InputMapping")
 	UInputMappingContext* MainMappingContext = nullptr;
