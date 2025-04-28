@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../../ProjectIncludes.h"
+#include "../../UI/MainCharacter/MainCharacterHUD.h"
 #include "MainController.generated.h"
 
 /**
@@ -14,4 +15,13 @@ class HEROOFHOPE_API AMainController : public APlayerController
 {
 	GENERATED_BODY()
 	
+protected:
+	UPROPERTY()
+	UMainCharacterHUD* MainHUD = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, Category = "HUD")
+	TSubclassOf<UMainCharacterHUD> mainHUDSubclass;
+public:
+	void OnPossess(APawn* aPawn) override;
+	void BeginPlay() override;
 };

@@ -3,6 +3,7 @@
 
 #include "MainCharacter.h"
 #include "../../Controllers/MainController/MainController.h"
+#include "../../UI/GameplayProgressBar.h"
 
 AMainCharacter::AMainCharacter()
 {
@@ -15,8 +16,6 @@ AMainCharacter::AMainCharacter()
 	/*GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;*/
 	GetCharacterMovement()->AirControl = 0.75;
 	GetCharacterMovement()->GetNavAgentPropertiesRef().bCanCrouch = true;
-
-
 }
 
 AMainCharacter::~AMainCharacter()
@@ -43,21 +42,13 @@ void AMainCharacter::Tick(float DeltaSeconds)
 	ABaseCharacter::Tick(DeltaSeconds);
 }
 
+void AMainCharacter::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+}
+
 float AMainCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (CurrentHealth > 0) {
-		int FinalDamage = (int)DamageAmount;
-		CurrentHealth -= FinalDamage;
-		if (CurrentHealth <= 0) {
-			this->Dead();
-		}
-		else {
-			FlashTimeline.PlayFromStart();
-			if (HurtSequence) {
-				//GetWorldTimerManager().SetTimer(HurtHandle, FTimerDelegate::CreateUObject(this, &AMainCharacter::SetHurtToNoneState), HurtSequence->GetTotalDuration(), false);
-			}
-		}
-	}
 	return 0.0f;
 }
 
@@ -68,8 +59,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 		if (AMainController* MainController = Cast<AMainController>(GetController())) {
 			EIComponent->BindAction(IA_Move, ETriggerEvent::Triggered, this, &AMainCharacter::Move);
 			EIComponent->BindAction(IA_Move, ETriggerEvent::Completed, this, &AMainCharacter::StopMoving);
-			EIComponent->BindAction(IA_Dodge, ETriggerEvent::Triggered, this, &AMainCharacter::Dodge);
-			EIComponent->BindAction(IA_Attack, ETriggerEvent::Triggered, this, &AMainCharacter::Attack);
+			EIComponent->BindAction(IA_SwitchCombatMode, ETriggerEvent::Triggered, this, &AMainCharacter::SwitchAttackMode);
 		}
 	}
 
@@ -100,68 +90,51 @@ void AMainCharacter::SetupMappingContext()
 void AMainCharacter::Move(const FInputActionValue& value)
 {
 	if (characterASComp) {
-		FGameplayTag gameplayTag = FGameplayTag::RequestGameplayTag(FName("State.Move"));
-		characterASComp->AddLooseGameplayTag(gameplayTag);
-	}
-	const float DirectionValue = value.Get<float>();
-	AddMovementInput(FVector(1, 0, 0), DirectionValue);
-	if (DirectionValue > 0) {
-		GetController()->SetControlRotation(FRotator(0, 0, 0));
-	}
-	else {
-		GetController()->SetControlRotation(FRotator(0, 180, 0));
+		FGameplayTag attackTag = FGameplayTag::RequestGameplayTag(FName("State.Attack"));
+		FGameplayTagContainer TagContainer = characterASComp->GetOwnedGameplayTags();
+		if (!TagContainer.HasTag(attackTag)) {
+			FGameplayTag gameplayTag = FGameplayTag::RequestGameplayTag(FName("State.Move"));
+			characterASComp->AddLooseGameplayTag(gameplayTag);
+			const float DirectionValue = value.Get<float>();
+			AddMovementInput(FVector(1, 0, 0), DirectionValue);
+			if (DirectionValue > 0) {
+				GetController()->SetControlRotation(FRotator(0, 0, 0));
+			}
+			else {
+				GetController()->SetControlRotation(FRotator(0, 180, 0));
+			}
+		}
 	}
 }
 
 void AMainCharacter::StopMoving()
 {
+	if (characterASComp) {
+		FGameplayTag gameplayTag = FGameplayTag::RequestGameplayTag(FName("State.Move"));
+		characterASComp->RemoveLooseGameplayTag(gameplayTag);
+	}
+
 	if (this->GetCharacterMovement()->GravityScale < 1) {
 		this->GetCharacterMovement()->GravityScale = 1;
 	}
 }
 
 
-void AMainCharacter::Dodge()
-{
-}
-
-
 void AMainCharacter::CustomJump()
 {
 	this->Jump();
-	//this->GetCharacterMovement()->AddImpulse(FVector(1000 * GetSprite()->GetForwardVector().X, 0, 600), true);
-}
-
-void AMainCharacter::Attack()
-{
-
-}
-
-void AMainCharacter::SetDodgeToNoneState()
-{
-}
-
-void AMainCharacter::EndAirAttack()
-{
-	if (attackCounter == 3) {
-		GetCharacterMovement()->GravityScale = 1;
-		AMainCharacter::EndAttack();
-		AMainCharacter::EndCombo();
-	}
-	else {
-		AMainCharacter::EndAttack();
-		GetCharacterMovement()->GravityScale = 1;
-	}
 }
 
 void AMainCharacter::Landed(const FHitResult& Hit)
 {
+	GetCharacterMovement()->GravityScale = 1;
+	attackCounter = 0;
 }
 
 void AMainCharacter::OnJumped_Implementation()
 {
 	if (attackCounter > 0) {
-		AMainCharacter::EndCombo();
+		attackCounter = 0;
 	}
 }
 

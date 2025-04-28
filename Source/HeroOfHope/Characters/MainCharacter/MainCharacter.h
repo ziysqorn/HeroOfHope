@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "../BaseCharacter/BaseCharacter.h"
+#include "../../UI/MainCharacter/MainCharacterHUD.h"
 #include "MainCharacter.generated.h"
 
 /**
@@ -35,47 +36,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Inputs|InputAction")
 	UInputAction* IA_Attack = nullptr;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Inputs|InputAction")
+	UInputAction* IA_SwitchCombatMode = nullptr;
+
 	//Input mapping context
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Inputs|InputMapping")
 	UInputMappingContext* MainMappingContext = nullptr;
 
-	//Animation Sequences
-	//Sword default combo
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Slash Default Combo")
-	UPaperZDAnimSequence* Slash1 = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Slash Default Combo")
-	UPaperZDAnimSequence* Slash2 = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Slash Default Combo")
-	UPaperZDAnimSequence* Slash3 = nullptr;
-
-	//Sword air combo
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Air Slash Combo")
-	UPaperZDAnimSequence* AirSlash1 = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Air Slash Combo")
-	UPaperZDAnimSequence* AirSlash2 = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Air Slash Combo")
-	UPaperZDAnimSequence* AirSlash3 = nullptr;
-	//Bow-combat
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Bow-combat")
-	UPaperZDAnimSequence* BowShoot = nullptr;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animation Sequences|Bow-combat")
-	UPaperZDAnimSequence* JumpShoot = nullptr;
-
 	//Timer Handle
 	FTimerHandle ComboHandle;
-	FTimerHandle SheatheSwordHandle;
 
-	//Sheathe the sword
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Is the Sword Sheathed ?")
-	bool isSwordSheathed = true;
-
+public:
 	//Attack counter
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Attack Counter")
-	int attackCounter{0};
+	int attackCounter = 0;
 
-	//Check character is sliding on the wall
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Character hit a wall ?")
-	bool WallSliding{ false };
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AttackMode")
+	bool isUsingSword = true;
 
 public:
 	AMainCharacter();
@@ -84,34 +61,29 @@ public:
 	void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	void SetupMappingContext();
 
-	UFUNCTION(BlueprintCallable)
-	int GetATKDamage() {
-		return ATK_Damage;
-	}
 
+	UFUNCTION()
+	float GetStaminaPercent() {
+		return 0.0f;
+	}
 
 
 	//Actions
 	virtual void Move(const FInputActionValue& value);
 	virtual void StopMoving();
-	void Dodge();
-	void CustomJump();
-	virtual void Attack();
-	void SheatheSword() {
-		isSwordSheathed = true;
-	}
-	virtual void EndAttack() {
-	}
-	void EndAirAttack();
-
-	virtual void EndCombo() {
+	void SwitchAttackMode() {
+		isUsingSword = !isUsingSword;
 		attackCounter = 0;
 	}
+	void CustomJump();
 
-	void SetDodgeToNoneState();
+	void EndComboTimer(float delay) {
+		GetWorldTimerManager().SetTimer(ComboHandle, FTimerDelegate::CreateUObject(this, &AMainCharacter::EndCombo), delay, false);
+	}
 
-	void CanDodgeEnable() {
-		if (!canDodge) canDodge = true;
+	void EndCombo() {
+		attackCounter = 0;
+		GetCharacterMovement()->GravityScale = 1.0f;
 	}
 
 	void Dead() override;
@@ -120,6 +92,8 @@ public:
 	void BeginPlay() override;
 	//Event tick
 	void Tick(float DeltaSeconds) override;
+
+	void PossessedBy(AController* NewController) override;
 
 	float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 

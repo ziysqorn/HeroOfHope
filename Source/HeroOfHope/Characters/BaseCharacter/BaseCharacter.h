@@ -20,13 +20,6 @@ class HEROOFHOPE_API ABaseCharacter : public APaperZDCharacter, public IAbilityS
 
 protected:
 	FName CharacterName;
-	//Character's base stats
-	int MaxHealth;
-	int ATK_Damage;
-	//Character's gameplay temporary stats
-	int CurrentHealth = MaxHealth;
-	//Can character dodge ?
-	bool canDodge = true;
 	//Animation sequences
 	//Attack sequence
 	UPROPERTY(EditDefaultsOnly, Category = "Important | Animation Sequence")
@@ -68,7 +61,7 @@ public:
 	virtual void BeginPlay() override;
 
 	virtual void Tick(float DeltaSeconds) override;
-	void PossessedBy(AController* NewController) override;
+	virtual void PossessedBy(AController* NewController) override;
 	void OnRep_PlayerState() override;
 	//Event taking damage
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
@@ -78,14 +71,10 @@ public:
 	UFUNCTION(BlueprintCallable)
 	virtual void Dead() {};
 
-	void FlashWhenDamaged(float Value);
+	UFUNCTION()
+	float GetHealthPercent();
 
-	int GetMaxHealth() {
-		return MaxHealth;
-	}
-	int GetCurrentHealth() {
-		return CurrentHealth;
-	}
+	void FlashWhenDamaged(float Value);
 
 	UAbilitySystemComponent* GetAbilitySystemComponent() const override{
 		return characterASComp;
@@ -95,68 +84,8 @@ public:
 	void InitializeAttributes();
 
 	UFUNCTION()
-	float GetHealthPercentage() const {
-		return (float)CurrentHealth / MaxHealth;
-	}
-
-	UFUNCTION()
 	FName& GetCharacterName() {
 		return CharacterName;
 	}
 
-	FTimerHandle& GetHitStopHandle() { 
-		return HitStopHandle; 
-	}
-
-
-	//Set Damage (min = 1) by a buff (pass in negative value = debuff)
-	void SetATKDamageByBuff(const int& Buff) {
-		if ((Buff < 0 && abs(Buff) < ATK_Damage) || Buff >= 0) {
-			ATK_Damage += Buff;
-		}
-		else {
-			ATK_Damage = 1;
-		}
-	}
-	//Set Damage (min = 0) directly by a new value
-	void SetATKDamageByNewValue(const int& NewDamage) {
-		if (NewDamage >= 0) {
-			ATK_Damage = NewDamage;
-		}
-		else {
-			ATK_Damage = 0;
-		}
-	}
-	//Set max health (min = 1) by a buff (pass in negative value = debuff)
-	void SetMaxHealthByBuff(const int& Buff) {
-		if ((Buff < 0 && abs(Buff) < MaxHealth) || Buff >= 0) {
-			MaxHealth += Buff;
-		}
-		else {
-			MaxHealth = 1;
-		}
-	}
-	void SetCurrentHealthByBuff(const int& Buff) {
-		int finalHealth = CurrentHealth + Buff;
-		if (finalHealth > MaxHealth) CurrentHealth = MaxHealth;
-		else if (finalHealth < 0) CurrentHealth = 0;
-		else CurrentHealth = finalHealth;
-	}
-	//Set max health (min=0) directly by a new value
-	void SetMaxHealthByNewValue(const int& NewMaxHealth) {
-		if (NewMaxHealth >= 0) {
-			MaxHealth = NewMaxHealth;
-		}
-		else {
-			MaxHealth = 0;
-		}
-	}
-	
-	//Return character damage amount after a buff (or debuff)
-	virtual int CalculatedDamage(const int& Buff) {
-		if ((Buff < 0 && abs(Buff) < ATK_Damage) || Buff >= 0) {
-			return ATK_Damage + Buff;
-		}
-		return 0;
-	}
 };

@@ -3,6 +3,7 @@
 
 #include "CharacterAttrSet.h"
 #include "../../Characters/BaseCharacter/BaseCharacter.h"
+#include "../../Controllers/MainController/MainController.h"
 
 void UCharacterAttrSet::PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue)
 {
@@ -22,6 +23,9 @@ void UCharacterAttrSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 	if (Data.EvaluatedData.Attribute == GetHealthAttribute()) {
 		const float localHealth = GetHealth();
 		if (localHealth <= 0.0f) {
+			if (Data.Target.GetOwnerActor()) {
+				Data.Target.GetOwnerActor()->Destroy();
+			}
 		}
 	}
 }

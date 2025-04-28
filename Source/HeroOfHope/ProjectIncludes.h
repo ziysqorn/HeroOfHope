@@ -43,6 +43,7 @@
 #include "Components/Slider.h"
 #include "Animation/WidgetAnimation.h"
 #include "Camera/CameraComponent.h"
+#include "Camera/CameraShakeBase.h"
 #include "PaperFlipbookComponent.h"
 #include "PaperSpriteComponent.h"
 #include "PaperTileMapComponent.h"

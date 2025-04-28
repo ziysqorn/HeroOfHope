@@ -37,6 +37,7 @@ void ABaseCharacter::PossessedBy(AController* NewController)
 
 	InitializeAttributes();
 	GiveAbilities();
+
 }
 
 void ABaseCharacter::OnRep_PlayerState()
@@ -65,6 +66,13 @@ void ABaseCharacter::OnRep_PlayerState()
 
 void ABaseCharacter::Landed(const FHitResult& Hit)
 {
+}
+
+
+float ABaseCharacter::GetHealthPercent()
+{
+	if (!characterAttrSet) return 0.0f;
+	return characterAttrSet->GetHealth() / characterAttrSet->GetMaxHealth();
 }
 
 void ABaseCharacter::FlashWhenDamaged(float Value)
@@ -104,19 +112,5 @@ void ABaseCharacter::InitializeAttributes()
 
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-	if (CurrentHealth > 0) {
-		int FinalDamage = (int)DamageAmount;
-		CurrentHealth -= FinalDamage;
-		if (CurrentHealth <= 0) {
-			this->Dead();
-		}
-		else {
-			FlashTimeline.PlayFromStart();
-			if (HurtSequence) {
-				/*GetWorldTimerManager().SetTimer(HurtHandle, FTimerDelegate::CreateUObject(this, &ABaseCharacter::SetHurtToNoneState), 
-					HurtSequence->GetTotalDuration(), false);*/
-			}
-		}
-	}
 	return 0.0f;
 }

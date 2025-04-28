@@ -16,7 +16,27 @@ class HEROOFHOPE_API UAttackAbility : public UCharacterAbility
 
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
-	UPaperZDAnimSequence* AnimToPlay = nullptr;
+	UPaperZDAnimSequence* Slash1 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* Slash2 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* Slash3 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* AirSlash1 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* AirSlash2 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* AirSlash3 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* Punch1 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* Punch2 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* Punch3 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* Kick1 = nullptr;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "AnimSequence")
+	UPaperZDAnimSequence* Kick2 = nullptr;
 
 	void ActivateAbility(
 		const FGameplayAbilitySpecHandle Handle,
@@ -25,5 +45,5 @@ protected:
 		const FGameplayEventData* TriggerEventData
 	) override;
 
-	void OnAttackAnimEnd(bool isCompleted);
+	FTimerHandle AttackHandle;
 };

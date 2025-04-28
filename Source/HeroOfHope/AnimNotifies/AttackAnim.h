@@ -21,5 +21,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "BoxPosition")
 	FVector BoxPosition;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffect")
+	TSubclassOf<UGameplayEffect> poisonEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffect")
+	TSubclassOf<UGameplayEffect> damageEffect;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GameplayEffect")
+	TSubclassOf<UCameraShakeBase> cameraShake;
+
 	void OnReceiveNotify_Implementation(UPaperZDAnimInstance* OwningInstance = nullptr) const override;
 };
